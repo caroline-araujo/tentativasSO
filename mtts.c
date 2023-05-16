@@ -100,12 +100,13 @@ int main(int argc, char *argv[]) {
     // criar threads trabalhadoras
     size_t block_size = nc;
     for (int i = 0; i < nt; i++) {
-    struct worker_args *wargs = malloc(sizeof(struct worker_args));
-    wargs->buf = buf + i * block_size;
-    wargs->len = i == nt - 1 ? filesize - i * block_size : block_size;
-    wargs->freq = freqs[i];
-    wargs->task_id = i;
-    pthread_create(&threads[i], NULL, (void *(*)(void *))worker, wargs);
+        struct worker_args *wargs = malloc(sizeof(struct worker_args));
+        wargs->buf = buf + i * block_size;
+        wargs->len = i == nt - 1 ? filesize - i * block_size : block_size;
+        wargs->freq = malloc(ALPHABET_SIZE * sizeof(int)); // Alocação de memória correta
+        memcpy(wargs->freq, freqs[i], ALPHABET_SIZE * sizeof(int)); // Copiar os valores para o vetor alocado
+        wargs->task_id = i;
+        pthread_create(&threads[i], NULL, (void *(*)(void *))worker, wargs);
     }
 
     // esperar pelas threads trabalhadoras terminarem
@@ -148,6 +149,7 @@ int main(int argc, char *argv[]) {
     }
 
     // limpeza
+    free(task_freq);
     free(buf);
     fclose(file);
     return 0;
