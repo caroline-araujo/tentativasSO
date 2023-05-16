@@ -24,8 +24,6 @@ struct worker_args {
 int freq[ALPHABET_SIZE] = {0};
 size_t total_len;
 
-pthread_t *threads;
-
 void *worker(void *arg) {
     struct worker_args *wargs = (struct worker_args *)arg;
     char *buf = wargs->buf;
@@ -62,14 +60,12 @@ int main(int argc, char *argv[]) {
     int nc = atoi(argv[2]);
     char *filename = argv[3];
 
+    int freqs[nt][ALPHABET_SIZE]; // vetor de frequências por thread
+    pthread_t threads[nt];
+
     if (nt < 1 || nc < 1) {
         fprintf(stderr, "nt e nc devem ser maiores ou iguais a 1.\n");
         exit(EXIT_FAILURE);
-    }
-
-    int **freqs = malloc(nt * sizeof(int *));
-    for (int i = 0; i < nt; i++) {
-        freqs[i] = calloc(ALPHABET_SIZE, sizeof(int));
     }
 
     FILE *file = fopen(filename, "r");
@@ -102,8 +98,6 @@ int main(int argc, char *argv[]) {
     printf("Relatório de tarefas:\n");
 
     // criar threads trabalhadoras
-    pthread_t threads[nt];
-    int freqs[nt][26]; // vetor de frequências por thread
     size_t block_size = nc;
     for (int i = 0; i < nt; i++) {
     struct worker_args *wargs = malloc(sizeof(struct worker_args));
@@ -120,7 +114,7 @@ int main(int argc, char *argv[]) {
     }
 
     // somar as frequências de todas as threads
-    int freq[26] = {0};
+    int freq[ALPHABET_SIZE] = {0};
     for (int i = 0; i < nt; i++) {
     for (int j = 0; j < 26; j++) {
     freq[j] += freqs[i][j];
@@ -154,12 +148,6 @@ int main(int argc, char *argv[]) {
     }
 
     // limpeza
-    for (int i = 0; i < nt; i++) {
-    free(freqs[i]);
-    }
-
-    free(freqs);
-    free(threads);
     free(buf);
     fclose(file);
     return 0;
